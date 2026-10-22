@@ -3,6 +3,7 @@ package com.trustvault.controller;
 
 import com.trustvault.User;
 import com.trustvault.service.UserService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,7 +39,8 @@ public class AuthController {
 
     @PostMapping("/api/login")
     public ResponseEntity<Map<String, String>> login(
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, String> request,
+            HttpSession session) {
 
         Optional<User> user = userService.verifyLogin(
                 request.get("email"),
@@ -46,9 +48,12 @@ public class AuthController {
         );
 
         if (user.isPresent()) {
+            session.setAttribute("userId", user.get().getId());
+            session.setAttribute("role", user.get().getRole());
+
             return ResponseEntity.ok(
                     Map.of(
-                            "message", "Credentials verified",
+                            "message", "Login successful",
                             "role", user.get().getRole()
                     )
             );
@@ -56,6 +61,17 @@ public class AuthController {
 
         return ResponseEntity.status(401).body(
                 Map.of("message", "Invalid email or password")
+        );
+    }
+
+    @PostMapping("/api/logout")
+    public ResponseEntity<Map<String, String>> logout(
+            HttpSession session) {
+
+        session.invalidate();
+
+        return ResponseEntity.ok(
+                Map.of("message", "Logged out successfully")
         );
     }
 }
