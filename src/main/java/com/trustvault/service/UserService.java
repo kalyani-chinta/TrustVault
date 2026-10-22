@@ -44,17 +44,22 @@ public class UserService {
         return "Account created successfully!";
     }
 
-    public boolean verifyLogin(String email, String password) {
+   public Optional<User> verifyLogin(String email, String password) {
 
-        if (email == null || email.isBlank()
-                || password == null || password.isBlank()) {
-            return false;
-        }
-
-        Optional<User> user =
-                userRepository.findByEmail(email.trim().toLowerCase());
-
-        return user.isPresent()
-                && passwordEncoder.matches(password, user.get().getPassword());
+    if (email == null || email.isBlank()
+            || password == null || password.isBlank()) {
+        return Optional.empty();
     }
+
+    Optional<User> user =
+            userRepository.findByEmail(email.trim().toLowerCase());
+
+    if (user.isPresent()
+            && passwordEncoder.matches(password, user.get().getPassword())) {
+        return user;
+    }
+
+    return Optional.empty();
 }
+}
+

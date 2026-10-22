@@ -1,11 +1,13 @@
 
 package com.trustvault.controller;
 
+import com.trustvault.User;
 import com.trustvault.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 public class AuthController {
@@ -30,21 +32,25 @@ public class AuthController {
             return ResponseEntity.ok(Map.of("message", result));
         }
 
-        return ResponseEntity.badRequest().body(Map.of("message", result));
+        return ResponseEntity.badRequest()
+                .body(Map.of("message", result));
     }
 
     @PostMapping("/api/login")
     public ResponseEntity<Map<String, String>> login(
             @RequestBody Map<String, String> request) {
 
-        boolean valid = userService.verifyLogin(
+        Optional<User> user = userService.verifyLogin(
                 request.get("email"),
                 request.get("password")
         );
 
-        if (valid) {
+        if (user.isPresent()) {
             return ResponseEntity.ok(
-                    Map.of("message", "Credentials verified")
+                    Map.of(
+                            "message", "Credentials verified",
+                            "role", user.get().getRole()
+                    )
             );
         }
 
