@@ -1,0 +1,102 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrustVault | Login</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #101827, #203b59);
+            color: #fff;
+        }
+        .card {
+            width: 90%;
+            max-width: 390px;
+            padding: 32px;
+            border-radius: 16px;
+            background: #fff;
+            color: #172033;
+            box-shadow: 0 12px 35px #0005;
+        }
+        h1 { margin: 0 0 8px; }
+        p { color: #667085; }
+        label { display: block; margin-top: 18px; font-weight: bold; }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 7px;
+            border: 1px solid #ccd3df;
+            border-radius: 8px;
+        }
+        button {
+            width: 100%;
+            padding: 13px;
+            margin-top: 22px;
+            border: 0;
+            border-radius: 8px;
+            background: #2459d3;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #message { overflow-wrap: anywhere; }
+        a { color: #2459d3; }
+    </style>
+</head>
+<body>
+    <main class="card">
+        <h1>TrustVault</h1>
+        <p>Sign in to access your secure documents.</p>
+
+        <form id="loginForm">
+            <label for="email">Email</label>
+            <input id="email" type="email" required autocomplete="email">
+
+            <label for="password">Password</label>
+            <input id="password" type="password" required
+                   autocomplete="current-password">
+
+            <button type="submit">Login</button>
+            <p id="message" role="status"></p>
+        </form>
+
+        <p>Don't have an account? <a href="/register.html">Register</a></p>
+    </main>
+
+   
+<script>
+document.getElementById("loginForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const message = document.getElementById("message");
+    message.textContent = "Checking credentials...";
+
+    try {
+        const response = await fetch("/api/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email: document.getElementById("email").value,
+                password: document.getElementById("password").value
+            })
+        });
+
+        const data = await response.json();
+        message.textContent = data.message || "Login failed.";
+    } catch (error) {
+        message.textContent = "Could not connect to server. Please try again.";
+    }
+});
+</script>
+</body>
+</html>
