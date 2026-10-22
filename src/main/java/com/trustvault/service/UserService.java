@@ -37,6 +37,7 @@ public class UserService {
         user.setFullName(fullName.trim());
         user.setEmail(normalizedEmail);
         user.setPassword(passwordEncoder.encode(password));
+        user.setRole("VIEWER");
 
         userRepository.save(user);
 
