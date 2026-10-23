@@ -2,40 +2,44 @@
 
 ## Secure Document Management System
 
-TrustVault is a web-based application designed to manage documents securely with role-based access control and document access tracking.
+TrustVault is a web-based application designed to manage documents with user authentication, ownership-based access, and audit logging.
 
 ## Problem Statement
 
-Managing sensitive documents requires controlled access and accountability. TrustVault aims to provide a centralized platform where document permissions and access activities can be managed transparently.
+Sensitive documents require controlled access and accountability. TrustVault provides a centralized platform for users to create, view, and manage their documents while recording relevant access activities.
 
 ## Objectives
 
 - Provide user registration and login.
-- Support role-based document access.
-- Track who accesses documents and when.
-- Maintain an audit trail for accountability.
+- Store user passwords securely using BCrypt hashing.
+- Support document ownership and access restrictions.
+- Record document creation and opening activities.
+- Provide administrators with access to audit logs.
 
 ## Technology Stack
 
-- Backend: Java, Spring Boot
-- Frontend: HTML, CSS, JavaScript
-- Database: MySQL
-- Security: Spring Security, BCrypt password hashing
-- Build Tool: Maven
+- **Backend:** Java, Spring Boot
+- **Frontend:** HTML, CSS, JavaScript
+- **Database:** MySQL
+- **Authentication:** Session-based login
+- **Password Security:** BCrypt
+- **Build Tool:** Maven
 
-## Current Progress
+## Implemented Features
 
-- Spring Boot project setup completed.
-- MySQL database configuration established.
-- User registration and password hashing implemented.
-- Login credential verification implemented.
-- Default Viewer role added for new users.
-
-Note: Role-based authorization, document management, and audit logging are still under development.
+- User registration with email validation and duplicate-email checks.
+- Password hashing and login credential verification.
+- Default Viewer role for new users.
+- Session handling for authenticated users.
+- Document creation and retrieval for the logged-in owner.
+- Ownership checks when opening documents.
+- Audit logging for document creation and opening.
+- Administrator-only audit log endpoint.
+- HTML pages for registration, login, and document management.
 
 ## Project Status
 
-Work in progress — features will be updated as development continues.
+TrustVault is a work in progress. Additional testing, user-interface improvements, deployment, and final validation remain to be completed.
 
 ## Repository
 
