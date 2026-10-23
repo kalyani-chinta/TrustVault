@@ -83,10 +83,37 @@ async function loadDocuments() {
     try {
         const response = await fetch("/api/documents");
 
-        if (response.status === 401) {
-            documentsList.textContent = "Please log in to view your documents.";
-            return;
-        }
+      if (response.status === 401) {
+    documentsList.innerHTML = `
+        <div style="
+            padding: 28px;
+            text-align: center;
+            background: #111d2e;
+            border: 1px solid #2d4058;
+            border-radius: 14px;
+            color: #e5e7eb;
+            margin: 16px 0;
+        ">
+            <div style="font-size: 42px; margin-bottom: 12px;">🔒</div>
+            <h3 style="color: #5eead4; margin: 0 0 10px;">
+                Login Required
+            </h3>
+            <p style="color: #cbd5e1; margin-bottom: 20px;">
+                Please sign in to access your secure documents.
+            </p>
+            <a href="/login.html" style="
+                display: inline-block;
+                padding: 11px 24px;
+                background: #5eead4;
+                color: #082f35;
+                text-decoration: none;
+                border-radius: 8px;
+                font-weight: bold;
+            ">Go to Login</a>
+        </div>
+    `;
+    return;
+}
         if (!response.ok) throw new Error();
 
         const documents = await response.json();
@@ -129,10 +156,38 @@ document.getElementById("documentForm").addEventListener("submit", async event =
             })
         });
 
-        if (response.status === 401) {
-            message.textContent = "Please log in before saving a document.";
-            return;
-        }
+      
+if (response.status === 401) {
+    message.innerHTML = `
+        <div style="
+            padding: 20px;
+            text-align: center;
+            background: #111d2e;
+            border: 1px solid #2d4058;
+            border-radius: 12px;
+            margin-top: 16px;
+        ">
+            <div style="font-size: 32px; margin-bottom: 8px;">🔒</div>
+            <h3 style="color: #65e6c3; margin: 0 0 10px;">
+                Login Required
+            </h3>
+            <p style="margin-bottom: 18px;">
+                Please sign in before saving your document.
+            </p>
+            <a href="/login.html" style="
+                display: inline-block;
+                padding: 10px 20px;
+                background: #65e6c3;
+                color: #08111f;
+                text-decoration: none;
+                border-radius: 6px;
+                font-weight: bold;
+            ">Go to Login</a>
+        </div>
+    `;
+    return;
+}
+
         if (!response.ok) {
             message.textContent = "Could not save document. Please check your input.";
             return;

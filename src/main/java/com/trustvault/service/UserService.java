@@ -24,6 +24,7 @@ public class UserService {
         if (fullName == null || fullName.isBlank()
                 || email == null || email.isBlank()
                 || password == null || password.length() < 8) {
+
             return "Please enter valid details. Password must contain at least 8 characters.";
         }
 
@@ -44,22 +45,32 @@ public class UserService {
         return "Account created successfully!";
     }
 
-   public Optional<User> verifyLogin(String email, String password) {
+    public Optional<User> verifyLogin(String email, String password) {
 
-    if (email == null || email.isBlank()
-            || password == null || password.isBlank()) {
+        if (email == null || email.isBlank()
+                || password == null || password.isBlank()) {
+
+            return Optional.empty();
+        }
+
+        Optional<User> user =
+                userRepository.findByEmail(email.trim().toLowerCase());
+
+        if (user.isPresent()
+                && passwordEncoder.matches(
+                        password, user.get().getPassword())) {
+
+            return user;
+        }
+
         return Optional.empty();
     }
 
-    Optional<User> user =
-            userRepository.findByEmail(email.trim().toLowerCase());
+    public Optional<User> findUserById(Long userId) {
+        if (userId == null) {
+            return Optional.empty();
+        }
 
-    if (user.isPresent()
-            && passwordEncoder.matches(password, user.get().getPassword())) {
-        return user;
+        return userRepository.findById(userId);
     }
-
-    return Optional.empty();
 }
-}
-

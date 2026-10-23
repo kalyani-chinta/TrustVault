@@ -39,6 +39,68 @@
             margin-left: 25px;
         }
 
+        nav a:hover {
+            color: #65e6c3;
+        }
+
+        .auth-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            padding: 20px;
+        }
+
+        .button,
+        .secondary {
+            display: inline-block;
+            padding: 14px 22px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .button {
+            background: #65e6c3;
+            color: #08111f;
+            border: 1px solid #65e6c3;
+            font-weight: bold;
+        }
+
+        .button:hover {
+            background: #4ed5b1;
+        }
+
+        .secondary {
+            color: #f5f7ff;
+            background: #08111f;
+            border: 1px solid #46546b;
+        }
+
+        .secondary:hover {
+            background: #1a2940;
+        }
+
+        button.secondary {
+            color: #f5f7ff;
+            background: #111e30;
+        }
+
+        button.secondary:hover {
+            background: #26394d;
+        }
+
+        .welcome-message {
+            color: #65e6c3;
+            font-size: 16px;
+            overflow-wrap: anywhere;
+        }
+
         .hero {
             min-height: 76vh;
             display: flex;
@@ -49,6 +111,7 @@
 
         .hero-content {
             flex: 1;
+            min-width: 0;
         }
 
         .tag {
@@ -73,25 +136,6 @@
             line-height: 1.8;
             max-width: 520px;
             margin-bottom: 30px;
-        }
-
-        .button {
-            display: inline-block;
-            background: #65e6c3;
-            color: #08111f;
-            padding: 15px 25px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .secondary {
-            color: #f5f7ff;
-            border: 1px solid #46546b;
-            padding: 14px 22px;
-            border-radius: 8px;
-            text-decoration: none;
-            margin-left: 10px;
         }
 
         .security-card {
@@ -192,9 +236,13 @@
                 grid-template-columns: 1fr;
             }
 
+            .auth-buttons {
+                gap: 10px;
+            }
+
+            .button,
             .secondary {
-                display: inline-block;
-                margin: 15px 0 0;
+                padding: 12px 16px;
             }
         }
     </style>
@@ -209,11 +257,12 @@
             <a href="#features">Features</a>
         </div>
     </nav>
-<div style="text-align:center; padding:20px;">
-    <a href="/login.html" class="button">Login</a>
-    <a href="/register.html" class="secondary">Create Account</a>
-    <a href="/documents.html" class="secondary">My Documents</a>
-</div>
+
+    <div id="authButtons" class="auth-buttons">
+        <a href="/login.html" class="button">Login</a>
+        <a href="/register.html" class="secondary">Create Account</a>
+        <a href="/documents.html" class="secondary">My Documents</a>
+    </div>
 
     <section class="hero" id="home">
         <div class="hero-content">
@@ -289,6 +338,75 @@
     <footer>
         © 2026 TrustVault. All rights reserved.
     </footer>
+
+    <script>
+        const authButtons = document.getElementById("authButtons");
+
+        async function updateAuthButtons() {
+            try {
+                const response = await fetch("/api/auth/me", {
+                    method: "GET",
+                    credentials: "same-origin"
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const user = await response.json();
+
+                const welcome = document.createElement("span");
+                welcome.className = "welcome-message";
+                welcome.textContent = "Welcome, " +
+                    (user.fullName || "TrustVault User");
+
+                const documentsLink = document.createElement("a");
+                documentsLink.href = "/documents.html";
+                documentsLink.className = "button";
+                documentsLink.textContent = "My Documents";
+
+                const logoutButton = document.createElement("button");
+                logoutButton.type = "button";
+                logoutButton.className = "secondary";
+                logoutButton.textContent = "Logout";
+
+                logoutButton.addEventListener("click", async () => {
+                    logoutButton.disabled = true;
+                    logoutButton.textContent = "Logging out...";
+
+                    try {
+                        const logoutResponse = await fetch("/api/logout", {
+                            method: "POST",
+                            credentials: "same-origin"
+                        });
+
+                        if (logoutResponse.ok) {
+                            window.location.reload();
+                        } else {
+                            logoutButton.disabled = false;
+                            logoutButton.textContent = "Logout";
+                            alert("Logout failed. Please try again.");
+                        }
+                    } catch (error) {
+                        logoutButton.disabled = false;
+                        logoutButton.textContent = "Logout";
+                        alert("Could not connect to the server.");
+                    }
+                });
+
+                authButtons.replaceChildren(
+                    welcome,
+                    documentsLink,
+                    logoutButton
+                );
+
+            } catch (error) {
+                console.error("Could not check login status:", error);
+            }
+        }
+
+        updateAuthButtons();
+    </script>
 
 </body>
 </html>
