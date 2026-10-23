@@ -67,9 +67,12 @@
 
 ## Remaining Work
 
-- Test registration, login, logout, document creation, and document retrieval end to end.
-- Improve login navigation and user feedback.
-- Test unauthorized and cross-user document access.
-- Verify administrator-only audit log access.
-- Review and update project documentation against the final Git history.
-- Deploy the application and test the deployed version before submission.
+- Complete end-to-end testing of registration, login, logout, document creation, and document retrieval.
+- Test access restrictions using two different user accounts, including attempts to open another user's document.
+- Verify administrator and viewer permissions, including unauthorized access to audit logs.
+- Review server-side authorization and handle invalid or missing session data safely.
+- Improve error handling and validate inputs across document and authentication endpoints.
+- Add or verify automated tests for authentication, document ownership, and audit-log authorization.
+- Update README setup instructions so another developer can run the application using the required Java, Maven wrapper, and MySQL configuration.
+- Deploy the application and verify the live URL, database connectivity, and core features.
+- Review the final repository, documentation, and Snovasys submission fields before the deadline.
