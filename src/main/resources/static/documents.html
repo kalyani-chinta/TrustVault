@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrustVault | My Documents</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            background: #08111f;
+            color: #f5f7ff;
+        }
+        .container { max-width: 800px; margin: auto; }
+        h1, h2 { color: #65e6c3; }
+        p { color: #aab7ca; line-height: 1.6; }
+        a { color: #65e6c3; }
+        .card {
+            background: #111e30;
+            border: 1px solid #26394d;
+            border-radius: 12px;
+            padding: 22px;
+            margin: 20px 0;
+        }
+        input, textarea {
+            display: block;
+            width: 100%;
+            margin: 12px 0;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #46546b;
+            background: #08111f;
+            color: white;
+        }
+        button {
+            padding: 12px 18px;
+            border: 0;
+            border-radius: 6px;
+            background: #65e6c3;
+            color: #08111f;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .document {
+            padding: 15px 0;
+            border-bottom: 1px solid #26394d;
+        }
+        #message { margin-top: 12px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a href="/">← Back to Home</a>
+    <h1>My Documents</h1>
+    <p>Create and manage your documents in TrustVault.</p>
+
+    <div class="card">
+        <h2>Create a Document</h2>
+        <form id="documentForm">
+            <input id="title" placeholder="Document title" required>
+            <textarea id="content" placeholder="Document content"
+                      rows="5" required></textarea>
+            <button type="submit">Save Document</button>
+        </form>
+        <p id="message"></p>
+    </div>
+
+    <div class="card">
+        <h2>My Saved Documents</h2>
+        <button id="refreshButton" type="button">Refresh</button>
+        <div id="documentsList"></div>
+    </div>
+</div>
+
+<script>
+const message = document.getElementById("message");
+const documentsList = document.getElementById("documentsList");
+
+async function loadDocuments() {
+    documentsList.textContent = "Loading...";
+    try {
+        const response = await fetch("/api/documents");
+
+        if (response.status === 401) {
+            documentsList.textContent = "Please log in to view your documents.";
+            return;
+        }
+        if (!response.ok) throw new Error();
+
+        const documents = await response.json();
+        documentsList.replaceChildren();
+
+        if (documents.length === 0) {
+            documentsList.textContent = "No documents saved yet.";
+            return;
+        }
+
+        documents.forEach(doc => {
+            const item = document.createElement("div");
+            item.className = "document";
+
+            const heading = document.createElement("h3");
+            heading.textContent = doc.title;
+
+            const content = document.createElement("p");
+            content.textContent = doc.content;
+
+            item.append(heading, content);
+            documentsList.appendChild(item);
+        });
+    } catch {
+        documentsList.textContent = "Could not load documents. Please refresh.";
+    }
+}
+
+document.getElementById("documentForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    message.textContent = "Saving document...";
+
+    try {
+        const response = await fetch("/api/documents", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title: document.getElementById("title").value.trim(),
+                content: document.getElementById("content").value.trim()
+            })
+        });
+
+        if (response.status === 401) {
+            message.textContent = "Please log in before saving a document.";
+            return;
+        }
+        if (!response.ok) {
+            message.textContent = "Could not save document. Please check your input.";
+            return;
+        }
+
+        message.textContent = "Document saved successfully!";
+        event.target.reset();
+        await loadDocuments();
+    } catch {
+        message.textContent = "Connection failed. Please try again.";
+    }
+});
+
+document.getElementById("refreshButton").addEventListener("click", loadDocuments);
+loadDocuments();
+</script>
+</body>
+</html>

@@ -92,7 +92,12 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
         });
 
         const data = await response.json();
-        message.textContent = data.message || "Login failed.";
+        if (response.ok) {
+    message.textContent = "Login successful! Redirecting...";
+    window.location.href = "/documents.html";
+} else {
+    message.textContent = data.message || "Login failed.";
+}
     } catch (error) {
         message.textContent = "Could not connect to server. Please try again.";
     }
