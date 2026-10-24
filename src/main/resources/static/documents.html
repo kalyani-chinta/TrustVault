@@ -266,13 +266,7 @@ async function loadDocuments() {
                 addText(item, "p", "File type: " + doc.fileType);
             }
 
-            const content = document.createElement("p");
-            const textContent = doc.content || "";
-            content.textContent = textContent.length > 3000
-                ? textContent.slice(0, 3000) + "\n\n[Preview shortened]"
-                : textContent;
-            item.appendChild(content);
-
+          
             const shareButton = document.createElement("button");
             shareButton.type = "button";
             shareButton.textContent = "Share";
