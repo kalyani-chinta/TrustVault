@@ -1,6 +1,7 @@
 
 package com.trustvault;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -29,7 +30,7 @@ public class Document {
 
     private Long fileSize;
 
-    // Protected document key hash (never store the actual key)
+    // Store only the hash, never the actual security key
     private String securityKeyHash;
 
     public Document() {
@@ -99,6 +100,7 @@ public class Document {
         this.fileSize = fileSize;
     }
 
+    @JsonIgnore
     public String getSecurityKeyHash() {
         return securityKeyHash;
     }
