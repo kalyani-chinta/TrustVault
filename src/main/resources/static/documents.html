@@ -7,7 +7,9 @@
     <title>TrustVault | My Documents</title>
 
     <style>
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         body {
             margin: 0;
@@ -17,10 +19,23 @@
             color: #f5f7ff;
         }
 
-        .container { max-width: 800px; margin: auto; }
-        h1, h2 { color: #65e6c3; }
-        p { color: #aab7ca; line-height: 1.6; }
-        a { color: #65e6c3; }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        h1, h2 {
+            color: #65e6c3;
+        }
+
+        p {
+            color: #aab7ca;
+            line-height: 1.6;
+        }
+
+        a {
+            color: #65e6c3;
+        }
 
         .card {
             background: #111e30;
@@ -52,7 +67,10 @@
             cursor: pointer;
         }
 
-        button:disabled { opacity: 0.6; cursor: wait; }
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
 
         .secondary {
             background: #26394d;
@@ -69,18 +87,47 @@
             overflow-wrap: anywhere;
         }
 
-        .message { margin-top: 12px; }
-        .hint { font-size: 13px; }
+        .message {
+            margin-top: 12px;
+        }
+
+        .hint {
+            font-size: 13px;
+        }
+
+        .ai-section {
+            max-width: 800px;
+            margin: 24px auto;
+            padding: 20px;
+            border: 1px solid #26394d;
+            border-radius: 12px;
+            background: #111e30;
+        }
+
+        #aiAnswer {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .document-content {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            line-height: 1.6;
+            color: #f5f7ff;
+        }
     </style>
 </head>
 
 <body>
+
 <div class="container">
+
     <a href="/">← Back to Home</a>
 
     <h1>My Documents</h1>
     <p>Create, upload, manage and securely share your documents.</p>
 
+    <!-- Upload a file -->
     <div class="card">
         <h2>Upload a File</h2>
         <p>Upload a PDF, Word document (.docx), or text file (.txt).</p>
@@ -92,58 +139,100 @@
                 accept=".pdf,.docx,.txt"
                 required
             >
+
             <p class="hint">Maximum file size: 10 MB.</p>
-            <button id="uploadButton" type="submit">Upload File</button>
+
+            <button id="uploadButton" type="submit">
+                Upload File
+            </button>
         </form>
 
         <p id="uploadMessage" class="message" aria-live="polite"></p>
     </div>
 
+    <!-- Create document manually -->
     <div class="card">
         <h2>Create a Document Manually</h2>
 
         <form id="documentForm">
-            <input id="title" placeholder="Document title" required>
-            <textarea id="content" placeholder="Document content"
-                      rows="5" required></textarea>
+            <input
+                id="title"
+                type="text"
+                placeholder="Document title"
+                required
+            >
+
+            <textarea
+                id="content"
+                placeholder="Document content"
+                rows="5"
+                required
+            ></textarea>
+
             <button type="submit">Save Document</button>
         </form>
 
         <p id="message" class="message" aria-live="polite"></p>
     </div>
 
+    <!-- My saved documents -->
     <div class="card">
         <h2>My Saved Documents</h2>
-        <button id="refreshButton" type="button">Refresh</button>
+
+        <button id="refreshButton" type="button">
+            Refresh
+        </button>
+
         <div id="documentsList"></div>
     </div>
 
+    <!-- Shared documents -->
     <div class="card">
         <h2>Shared With Me</h2>
-        <button id="sharedRefreshButton" type="button" class="secondary">
+
+        <button
+            id="sharedRefreshButton"
+            type="button"
+            class="secondary"
+        >
             Refresh Shared Documents
         </button>
+
         <div id="sharedDocumentsList"></div>
     </div>
+
+    <!-- AI assistant -->
+    <div class="ai-section">
+        <h2>TrustVault AI Assistant</h2>
+        <p>Ask questions or summarize your document.</p>
+
+        <label for="aiDocumentId">Document ID</label>
+
+        <input
+            id="aiDocumentId"
+            type="number"
+            min="1"
+            placeholder="Enter document ID"
+            required
+        >
+
+        <label for="aiQuestion">Your question</label>
+
+        <textarea
+            id="aiQuestion"
+            maxlength="1000"
+            placeholder="Summarize this document..."
+            rows="4"
+        ></textarea>
+
+        <button id="askAiButton" type="button">
+            Ask AI
+        </button>
+
+        <pre id="aiAnswer"></pre>
+    </div>
+
 </div>
-
-<section style="margin:24px 0;padding:20px;border:1px solid #ccc;border-radius:12px">
-    <h2>TrustVault AI Assistant</h2>
-    <p>Ask questions or summarize your document.</p>
-
-    <label for="aiDocumentId">Document ID</label>
-    <input id="aiDocumentId" type="number" min="1"
-           placeholder="Enter document ID" required
-           style="display:block;width:100%;padding:10px;margin:8px 0">
-
-    <label for="aiQuestion">Your question</label>
-    <textarea id="aiQuestion" maxlength="1000"
-              placeholder="Summarize this document..."
-              style="display:block;width:100%;padding:10px;margin:8px 0"></textarea>
-
-    <button id="askAiButton" type="button">Ask AI</button>
-    <pre id="aiAnswer" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
-</section>
 
 <script>
 const message = document.getElementById("message");
@@ -151,7 +240,8 @@ const uploadMessage = document.getElementById("uploadMessage");
 const uploadForm = document.getElementById("uploadForm");
 const uploadButton = document.getElementById("uploadButton");
 const documentsList = document.getElementById("documentsList");
-const sharedDocumentsList = document.getElementById("sharedDocumentsList");
+const sharedDocumentsList =
+    document.getElementById("sharedDocumentsList");
 
 async function readMessage(response) {
     return await response.json().catch(() => ({}));
@@ -164,7 +254,70 @@ function addText(parent, tag, value) {
     return element;
 }
 
-// Upload PDF, DOCX or TXT files.
+/* OPEN A DOCUMENT */
+async function openDocument(doc, button) {
+    button.disabled = true;
+    button.textContent = "Opening...";
+
+    try {
+        const response = await fetch(`/api/documents/${doc.id}`);
+
+        if (response.status === 401) {
+            alert("Please log in to open this document.");
+            return;
+        }
+
+        if (!response.ok) {
+            alert(
+                "Could not open document. Check your access and try again."
+            );
+            return;
+        }
+
+        const openedDoc = await response.json();
+
+        // Open a new tab only after the document request succeeds.
+        const contentWindow = window.open("", "_blank");
+
+        if (!contentWindow) {
+            alert("Please allow pop-ups to open the document.");
+            return;
+        }
+
+        contentWindow.document.title =
+            openedDoc.title || "TrustVault Document";
+
+        contentWindow.document.body.style.cssText =
+            "font-family:Arial,sans-serif;" +
+            "background:#08111f;color:#f5f7ff;" +
+            "padding:30px;line-height:1.6;";
+
+        const heading = contentWindow.document.createElement("h2");
+        heading.textContent = openedDoc.title || "Document";
+        heading.style.color = "#65e6c3";
+        contentWindow.document.body.appendChild(heading);
+
+        const content = contentWindow.document.createElement("pre");
+        content.textContent = openedDoc.content ||
+            "Document content is not available through this endpoint. " +
+            "For uploaded PDF or DOCX files, a secure file-download " +
+            "endpoint is required.";
+        content.style.cssText =
+            "white-space:pre-wrap;overflow-wrap:anywhere;" +
+            "font-family:Arial,sans-serif;";
+        contentWindow.document.body.appendChild(content);
+
+    } catch (error) {
+        alert("Connection failed while opening the document.");
+    } finally {
+        button.disabled = false;
+        button.textContent = doc.isShared
+            ? "Open Shared Document"
+            : "Open Document";
+    }
+}
+
+/* UPLOAD PDF, DOCX OR TXT */
 uploadForm.addEventListener("submit", async event => {
     event.preventDefault();
 
@@ -178,15 +331,20 @@ uploadForm.addEventListener("submit", async event => {
 
     const allowedExtensions = [".pdf", ".docx", ".txt"];
     const fileName = file.name.toLowerCase();
-    const allowed = allowedExtensions.some(ext => fileName.endsWith(ext));
+
+    const allowed = allowedExtensions.some(ext =>
+        fileName.endsWith(ext)
+    );
 
     if (!allowed) {
-        uploadMessage.textContent = "Only PDF, DOCX and TXT files are allowed.";
+        uploadMessage.textContent =
+            "Only PDF, DOCX and TXT files are allowed.";
         return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-        uploadMessage.textContent = "File size must not exceed 10 MB.";
+        uploadMessage.textContent =
+            "File size must not exceed 10 MB.";
         return;
     }
 
@@ -205,7 +363,8 @@ uploadForm.addEventListener("submit", async event => {
         const result = await readMessage(response);
 
         if (response.status === 401) {
-            uploadMessage.textContent = "Please log in before uploading.";
+            uploadMessage.textContent =
+                "Please log in before uploading.";
             return;
         }
 
@@ -220,6 +379,7 @@ uploadForm.addEventListener("submit", async event => {
 
         uploadForm.reset();
         await loadDocuments();
+
     } catch (error) {
         uploadMessage.textContent =
             "Connection failed. Check whether the server is running.";
@@ -228,7 +388,7 @@ uploadForm.addEventListener("submit", async event => {
     }
 });
 
-// Load documents owned by the logged-in user.
+/* LOAD MY DOCUMENTS */
 async function loadDocuments() {
     documentsList.textContent = "Loading documents...";
 
@@ -236,7 +396,8 @@ async function loadDocuments() {
         const response = await fetch("/api/documents");
 
         if (response.status === 401) {
-            documentsList.textContent = "Please log in to view documents.";
+            documentsList.textContent =
+                "Please log in to view documents.";
             return;
         }
 
@@ -247,7 +408,7 @@ async function loadDocuments() {
         const documents = await response.json();
         documentsList.replaceChildren();
 
-        if (!documents.length) {
+        if (!Array.isArray(documents) || documents.length === 0) {
             documentsList.textContent = "No documents saved yet.";
             return;
         }
@@ -256,17 +417,30 @@ async function loadDocuments() {
             const item = document.createElement("div");
             item.className = "document";
 
-            addText(item, "h3", doc.title);
+            addText(item, "h3", doc.title || "Untitled Document");
 
             if (doc.originalFileName) {
-                addText(item, "p", "Uploaded file: " + doc.originalFileName);
+                addText(
+                    item,
+                    "p",
+                    "Uploaded file: " + doc.originalFileName
+                );
             }
 
             if (doc.fileType) {
                 addText(item, "p", "File type: " + doc.fileType);
             }
 
-          
+            // NEW: Open Document button
+            const openButton = document.createElement("button");
+            openButton.type = "button";
+            openButton.textContent = "Open Document";
+
+            openButton.addEventListener("click", () => {
+                openDocument(doc, openButton);
+            });
+
+            // Share button
             const shareButton = document.createElement("button");
             shareButton.type = "button";
             shareButton.textContent = "Share";
@@ -276,7 +450,9 @@ async function loadDocuments() {
                     "Enter the registered email of the user to share with:"
                 );
 
-                if (!email || !email.trim()) return;
+                if (!email || !email.trim()) {
+                    return;
+                }
 
                 shareButton.disabled = true;
 
@@ -285,8 +461,12 @@ async function loadDocuments() {
                         `/api/documents/${doc.id}/share`,
                         {
                             method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ email: email.trim() })
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                email: email.trim()
+                            })
                         }
                     );
 
@@ -298,13 +478,15 @@ async function loadDocuments() {
                             ? "Document shared successfully."
                             : "Could not share document.")
                     );
-                } catch {
+
+                } catch (error) {
                     alert("Connection failed. Please try again.");
                 } finally {
                     shareButton.disabled = false;
                 }
             });
 
+            // Revoke access button
             const revokeButton = document.createElement("button");
             revokeButton.type = "button";
             revokeButton.textContent = "Revoke Access";
@@ -315,7 +497,9 @@ async function loadDocuments() {
                     "Enter the registered email to revoke access:"
                 );
 
-                if (!email || !email.trim()) return;
+                if (!email || !email.trim()) {
+                    return;
+                }
 
                 revokeButton.disabled = true;
 
@@ -330,19 +514,25 @@ async function loadDocuments() {
                     }
 
                     const shares = await response.json();
+
                     const share = shares.find(entry =>
                         entry.email &&
-                        entry.email.toLowerCase() === email.trim().toLowerCase()
+                        entry.email.toLowerCase() ===
+                            email.trim().toLowerCase()
                     );
 
                     if (!share) {
-                        alert("This user does not have access to this document.");
+                        alert(
+                            "This user does not have access to this document."
+                        );
                         return;
                     }
 
                     const revokeResponse = await fetch(
                         `/api/documents/${doc.id}/share/${share.userId}`,
-                        { method: "DELETE" }
+                        {
+                            method: "DELETE"
+                        }
                     );
 
                     const result = await readMessage(revokeResponse);
@@ -353,6 +543,7 @@ async function loadDocuments() {
                             ? "Access revoked successfully."
                             : "Could not revoke access.")
                     );
+
                 } catch (error) {
                     alert("Revoke error: " + error.message);
                 } finally {
@@ -360,21 +551,25 @@ async function loadDocuments() {
                 }
             });
 
-            item.append(shareButton, revokeButton);
+            // Show all three buttons
+            item.append(openButton, shareButton, revokeButton);
             documentsList.appendChild(item);
         });
-    } catch {
+
+    } catch (error) {
         documentsList.textContent =
             "Could not load documents. Please refresh.";
     }
 }
 
-// Load documents shared with the logged-in user.
+/* LOAD DOCUMENTS SHARED WITH ME */
 async function loadSharedDocuments() {
     sharedDocumentsList.textContent = "Loading shared documents...";
 
     try {
-        const response = await fetch("/api/documents/shared-with-me");
+        const response = await fetch(
+            "/api/documents/shared-with-me"
+        );
 
         if (response.status === 401) {
             sharedDocumentsList.textContent =
@@ -389,7 +584,7 @@ async function loadSharedDocuments() {
         const documents = await response.json();
         sharedDocumentsList.replaceChildren();
 
-        if (!documents.length) {
+        if (!Array.isArray(documents) || documents.length === 0) {
             sharedDocumentsList.textContent =
                 "No documents have been shared with you yet.";
             return;
@@ -399,64 +594,65 @@ async function loadSharedDocuments() {
             const item = document.createElement("div");
             item.className = "document";
 
-            addText(item, "h3", doc.title);
+            addText(item, "h3", doc.title || "Untitled Document");
+
+            if (doc.originalFileName) {
+                addText(
+                    item,
+                    "p",
+                    "Uploaded file: " + doc.originalFileName
+                );
+            }
 
             const openButton = document.createElement("button");
             openButton.type = "button";
             openButton.textContent = "Open Shared Document";
 
-            openButton.addEventListener("click", async () => {
-                openButton.disabled = true;
+            const sharedDoc = {
+                ...doc,
+                isShared: true
+            };
 
-                try {
-                    const openResponse = await fetch(
-                        `/api/documents/${doc.id}`
-                    );
-
-                    if (!openResponse.ok) {
-                        alert(
-                            "Unable to open document. Access may have been revoked."
-                        );
-                        await loadSharedDocuments();
-                        return;
-                    }
-
-                    const openedDoc = await openResponse.json();
-
-                    alert(
-                        "Document: " + openedDoc.title +
-                        "\n\nContent:\n" + (openedDoc.content || "")
-                    );
-                } catch {
-                    alert("Connection failed. Please try again.");
-                } finally {
-                    openButton.disabled = false;
-                }
+            openButton.addEventListener("click", () => {
+                openDocument(sharedDoc, openButton);
             });
 
             item.appendChild(openButton);
             sharedDocumentsList.appendChild(item);
         });
-    } catch {
+
+    } catch (error) {
         sharedDocumentsList.textContent =
             "Could not load shared documents. Please refresh.";
     }
 }
 
-// Create a document manually.
+/* CREATE A DOCUMENT MANUALLY */
 document.getElementById("documentForm").addEventListener(
     "submit",
     async event => {
         event.preventDefault();
+
         message.textContent = "Saving document...";
+
+        const title = document.getElementById("title").value.trim();
+        const content = document.getElementById("content").value.trim();
+
+        if (!title || !content) {
+            message.textContent =
+                "Please enter both a title and document content.";
+            return;
+        }
 
         try {
             const response = await fetch("/api/documents", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json"
+                },
                 body: JSON.stringify({
-                    title: document.getElementById("title").value.trim(),
-                    content: document.getElementById("content").value.trim()
+                    title: title,
+                    content: content
                 })
             });
 
@@ -476,58 +672,76 @@ document.getElementById("documentForm").addEventListener(
 
             message.textContent = "Document saved successfully!";
             event.target.reset();
+
             await loadDocuments();
-        } catch {
-            message.textContent = "Connection failed. Please try again.";
+
+        } catch (error) {
+            message.textContent =
+                "Connection failed. Please try again.";
         }
     }
 );
 
+/* REFRESH BUTTONS */
 document.getElementById("refreshButton")
     .addEventListener("click", loadDocuments);
 
 document.getElementById("sharedRefreshButton")
     .addEventListener("click", loadSharedDocuments);
-    
-document.getElementById("askAiButton").addEventListener("click", async () => {
-    const documentId = document.getElementById("aiDocumentId").value;
-    const question = document.getElementById("aiQuestion").value.trim();
-    const answerBox = document.getElementById("aiAnswer");
-    const button = document.getElementById("askAiButton");
 
-    if (!documentId || !question) {
-        answerBox.textContent = "Enter document ID and question.";
-        return;
+/* AI ASSISTANT */
+document.getElementById("askAiButton").addEventListener(
+    "click",
+    async () => {
+        const documentId =
+            document.getElementById("aiDocumentId").value;
+
+        const question =
+            document.getElementById("aiQuestion").value.trim();
+
+        const answerBox = document.getElementById("aiAnswer");
+        const button = document.getElementById("askAiButton");
+
+        if (!documentId || !question) {
+            answerBox.textContent =
+                "Enter document ID and question.";
+            return;
+        }
+
+        button.disabled = true;
+        answerBox.textContent = "AI is thinking...";
+
+        try {
+            const response = await fetch("/api/ai/ask", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    documentId: Number(documentId),
+                    question: question
+                })
+            });
+
+            const result = await readMessage(response);
+
+            answerBox.textContent = response.ok
+                ? (result.answer || "No answer returned.")
+                : (result.message || "AI request failed.");
+
+        } catch (error) {
+            answerBox.textContent = "Connection failed.";
+        } finally {
+            button.disabled = false;
+        }
     }
+);
 
-    button.disabled = true;
-    answerBox.textContent = "AI is thinking...";
-
-    try {
-        const response = await fetch("/api/ai/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                documentId: Number(documentId),
-                question
-            })
-        });
-
-        const result = await response.json();
-        answerBox.textContent = response.ok
-            ? result.answer
-            : (result.message || "AI request failed.");
-    } catch {
-        answerBox.textContent = "Connection failed.";
-    } finally {
-        button.disabled = false;
-    }
-});
-
-
+/* LOAD DOCUMENTS WHEN PAGE OPENS */
 loadDocuments();
 loadSharedDocuments();
+
 </script>
+
 </body>
 </html>
-
