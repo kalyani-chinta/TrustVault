@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TrustVault | My Documents</title>
+
     <style>
         * { box-sizing: border-box; }
 
@@ -51,6 +52,8 @@
             cursor: pointer;
         }
 
+        button:disabled { opacity: 0.6; cursor: wait; }
+
         .secondary {
             background: #26394d;
             color: #f5f7ff;
@@ -67,23 +70,46 @@
         }
 
         .message { margin-top: 12px; }
+        .hint { font-size: 13px; }
     </style>
 </head>
+
 <body>
 <div class="container">
     <a href="/">← Back to Home</a>
+
     <h1>My Documents</h1>
-    <p>Create, manage and securely share your documents.</p>
+    <p>Create, upload, manage and securely share your documents.</p>
 
     <div class="card">
-        <h2>Create a Document</h2>
+        <h2>Upload a File</h2>
+        <p>Upload a PDF, Word document (.docx), or text file (.txt).</p>
+
+        <form id="uploadForm">
+            <input
+                id="file"
+                type="file"
+                accept=".pdf,.docx,.txt"
+                required
+            >
+            <p class="hint">Maximum file size: 10 MB.</p>
+            <button id="uploadButton" type="submit">Upload File</button>
+        </form>
+
+        <p id="uploadMessage" class="message" aria-live="polite"></p>
+    </div>
+
+    <div class="card">
+        <h2>Create a Document Manually</h2>
+
         <form id="documentForm">
             <input id="title" placeholder="Document title" required>
             <textarea id="content" placeholder="Document content"
                       rows="5" required></textarea>
             <button type="submit">Save Document</button>
         </form>
-        <p id="message" class="message"></p>
+
+        <p id="message" class="message" aria-live="polite"></p>
     </div>
 
     <div class="card">
@@ -101,16 +127,108 @@
     </div>
 </div>
 
+<section style="margin:24px 0;padding:20px;border:1px solid #ccc;border-radius:12px">
+    <h2>TrustVault AI Assistant</h2>
+    <p>Ask questions or summarize your document.</p>
+
+    <label for="aiDocumentId">Document ID</label>
+    <input id="aiDocumentId" type="number" min="1"
+           placeholder="Enter document ID" required
+           style="display:block;width:100%;padding:10px;margin:8px 0">
+
+    <label for="aiQuestion">Your question</label>
+    <textarea id="aiQuestion" maxlength="1000"
+              placeholder="Summarize this document..."
+              style="display:block;width:100%;padding:10px;margin:8px 0"></textarea>
+
+    <button id="askAiButton" type="button">Ask AI</button>
+    <pre id="aiAnswer" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
+</section>
+
 <script>
 const message = document.getElementById("message");
+const uploadMessage = document.getElementById("uploadMessage");
+const uploadForm = document.getElementById("uploadForm");
+const uploadButton = document.getElementById("uploadButton");
 const documentsList = document.getElementById("documentsList");
-const sharedDocumentsList =
-    document.getElementById("sharedDocumentsList");
+const sharedDocumentsList = document.getElementById("sharedDocumentsList");
 
 async function readMessage(response) {
     return await response.json().catch(() => ({}));
 }
 
+function addText(parent, tag, value) {
+    const element = document.createElement(tag);
+    element.textContent = value ?? "";
+    parent.appendChild(element);
+    return element;
+}
+
+// Upload PDF, DOCX or TXT files.
+uploadForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const fileInput = document.getElementById("file");
+    const file = fileInput.files[0];
+
+    if (!file) {
+        uploadMessage.textContent = "Please select a file.";
+        return;
+    }
+
+    const allowedExtensions = [".pdf", ".docx", ".txt"];
+    const fileName = file.name.toLowerCase();
+    const allowed = allowedExtensions.some(ext => fileName.endsWith(ext));
+
+    if (!allowed) {
+        uploadMessage.textContent = "Only PDF, DOCX and TXT files are allowed.";
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        uploadMessage.textContent = "File size must not exceed 10 MB.";
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    uploadButton.disabled = true;
+    uploadMessage.textContent = "Uploading file. Please wait...";
+
+    try {
+        const response = await fetch("/api/documents/upload", {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await readMessage(response);
+
+        if (response.status === 401) {
+            uploadMessage.textContent = "Please log in before uploading.";
+            return;
+        }
+
+        if (!response.ok) {
+            uploadMessage.textContent =
+                result.message || "Upload failed. Please try again.";
+            return;
+        }
+
+        uploadMessage.textContent =
+            result.message || "File uploaded successfully!";
+
+        uploadForm.reset();
+        await loadDocuments();
+    } catch (error) {
+        uploadMessage.textContent =
+            "Connection failed. Check whether the server is running.";
+    } finally {
+        uploadButton.disabled = false;
+    }
+});
+
+// Load documents owned by the logged-in user.
 async function loadDocuments() {
     documentsList.textContent = "Loading documents...";
 
@@ -129,7 +247,7 @@ async function loadDocuments() {
         const documents = await response.json();
         documentsList.replaceChildren();
 
-        if (documents.length === 0) {
+        if (!documents.length) {
             documentsList.textContent = "No documents saved yet.";
             return;
         }
@@ -138,11 +256,22 @@ async function loadDocuments() {
             const item = document.createElement("div");
             item.className = "document";
 
-            const heading = document.createElement("h3");
-            heading.textContent = doc.title;
+            addText(item, "h3", doc.title);
+
+            if (doc.originalFileName) {
+                addText(item, "p", "Uploaded file: " + doc.originalFileName);
+            }
+
+            if (doc.fileType) {
+                addText(item, "p", "File type: " + doc.fileType);
+            }
 
             const content = document.createElement("p");
-            content.textContent = doc.content;
+            const textContent = doc.content || "";
+            content.textContent = textContent.length > 3000
+                ? textContent.slice(0, 3000) + "\n\n[Preview shortened]"
+                : textContent;
+            item.appendChild(content);
 
             const shareButton = document.createElement("button");
             shareButton.type = "button";
@@ -155,7 +284,6 @@ async function loadDocuments() {
 
                 if (!email || !email.trim()) return;
 
-
                 shareButton.disabled = true;
 
                 try {
@@ -163,12 +291,8 @@ async function loadDocuments() {
                         `/api/documents/${doc.id}/share`,
                         {
                             method: "POST",
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({
-                                email: email.trim()
-                            })
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ email: email.trim() })
                         }
                     );
 
@@ -186,51 +310,63 @@ async function loadDocuments() {
                     shareButton.disabled = false;
                 }
             });
-const revokeButton = document.createElement("button");
-revokeButton.textContent = "Revoke Access";
-revokeButton.type = "button";
 
-revokeButton.addEventListener("click", async () => {
-    const email = prompt("Enter the registered email to revoke access:");
-    if (!email || !email.trim()) return;
+            const revokeButton = document.createElement("button");
+            revokeButton.type = "button";
+            revokeButton.textContent = "Revoke Access";
+            revokeButton.className = "secondary";
 
-    try {
-        const response = await fetch(
-            `/api/documents/${doc.id}/shares`
-        );
+            revokeButton.addEventListener("click", async () => {
+                const email = prompt(
+                    "Enter the registered email to revoke access:"
+                );
 
-        if (!response.ok) {
-            alert("Could not find shared users.");
-            return;
-        }
+                if (!email || !email.trim()) return;
 
-        const shares = await response.json();
-        console.log("SHARES FOUND:", shares);
-        const share = shares.find(
-            item => item.email.toLowerCase() === email.trim().toLowerCase()
-        );
+                revokeButton.disabled = true;
 
-        if (!share) {
-            alert("This user does not have access to this document.");
-            return;
-        }
+                try {
+                    const response = await fetch(
+                        `/api/documents/${doc.id}/shares`
+                    );
 
-        const revokeResponse = await fetch(
-            `/api/documents/${doc.id}/share/${share.userId}`,
-            { method: "DELETE" }
-        );
+                    if (!response.ok) {
+                        alert("Could not find shared users.");
+                        return;
+                    }
 
-        const result = await revokeResponse.json().catch(() => ({}));
-        alert(result.message || (revokeResponse.ok
-            ? "Access revoked successfully."
-            : "Could not revoke access."));
-} catch (error) {
-    console.error("Revoke error:", error);
-    alert("Revoke error: " + error.message);
+                    const shares = await response.json();
+                    const share = shares.find(entry =>
+                        entry.email &&
+                        entry.email.toLowerCase() === email.trim().toLowerCase()
+                    );
 
-    }
-});
-            item.append(heading, content, shareButton, revokeButton);
+                    if (!share) {
+                        alert("This user does not have access to this document.");
+                        return;
+                    }
+
+                    const revokeResponse = await fetch(
+                        `/api/documents/${doc.id}/share/${share.userId}`,
+                        { method: "DELETE" }
+                    );
+
+                    const result = await readMessage(revokeResponse);
+
+                    alert(
+                        result.message ||
+                        (revokeResponse.ok
+                            ? "Access revoked successfully."
+                            : "Could not revoke access.")
+                    );
+                } catch (error) {
+                    alert("Revoke error: " + error.message);
+                } finally {
+                    revokeButton.disabled = false;
+                }
+            });
+
+            item.append(shareButton, revokeButton);
             documentsList.appendChild(item);
         });
     } catch {
@@ -239,6 +375,7 @@ revokeButton.addEventListener("click", async () => {
     }
 }
 
+// Load documents shared with the logged-in user.
 async function loadSharedDocuments() {
     sharedDocumentsList.textContent = "Loading shared documents...";
 
@@ -258,7 +395,7 @@ async function loadSharedDocuments() {
         const documents = await response.json();
         sharedDocumentsList.replaceChildren();
 
-        if (documents.length === 0) {
+        if (!documents.length) {
             sharedDocumentsList.textContent =
                 "No documents have been shared with you yet.";
             return;
@@ -268,38 +405,42 @@ async function loadSharedDocuments() {
             const item = document.createElement("div");
             item.className = "document";
 
-            const heading = document.createElement("h3");
-            heading.textContent = doc.title;
-
-            const content = document.createElement("p");
-            content.textContent = doc.content;
+            addText(item, "h3", doc.title);
 
             const openButton = document.createElement("button");
             openButton.type = "button";
             openButton.textContent = "Open Shared Document";
 
             openButton.addEventListener("click", async () => {
+                openButton.disabled = true;
+
                 try {
-                    const openResponse =
-                        await fetch(`/api/documents/${doc.id}`);
+                    const openResponse = await fetch(
+                        `/api/documents/${doc.id}`
+                    );
 
                     if (!openResponse.ok) {
-                        alert("Unable to open document. Access may have been revoked.");
+                        alert(
+                            "Unable to open document. Access may have been revoked."
+                        );
                         await loadSharedDocuments();
                         return;
                     }
 
                     const openedDoc = await openResponse.json();
+
                     alert(
                         "Document: " + openedDoc.title +
-                        "\n\nContent:\n" + openedDoc.content
+                        "\n\nContent:\n" + (openedDoc.content || "")
                     );
                 } catch {
                     alert("Connection failed. Please try again.");
+                } finally {
+                    openButton.disabled = false;
                 }
             });
 
-            item.append(heading, content, openButton);
+            item.appendChild(openButton);
             sharedDocumentsList.appendChild(item);
         });
     } catch {
@@ -308,6 +449,7 @@ async function loadSharedDocuments() {
     }
 }
 
+// Create a document manually.
 document.getElementById("documentForm").addEventListener(
     "submit",
     async event => {
@@ -317,9 +459,7 @@ document.getElementById("documentForm").addEventListener(
         try {
             const response = await fetch("/api/documents", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     title: document.getElementById("title").value.trim(),
                     content: document.getElementById("content").value.trim()
@@ -354,9 +494,46 @@ document.getElementById("refreshButton")
 
 document.getElementById("sharedRefreshButton")
     .addEventListener("click", loadSharedDocuments);
+    
+document.getElementById("askAiButton").addEventListener("click", async () => {
+    const documentId = document.getElementById("aiDocumentId").value;
+    const question = document.getElementById("aiQuestion").value.trim();
+    const answerBox = document.getElementById("aiAnswer");
+    const button = document.getElementById("askAiButton");
+
+    if (!documentId || !question) {
+        answerBox.textContent = "Enter document ID and question.";
+        return;
+    }
+
+    button.disabled = true;
+    answerBox.textContent = "AI is thinking...";
+
+    try {
+        const response = await fetch("/api/ai/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                documentId: Number(documentId),
+                question
+            })
+        });
+
+        const result = await response.json();
+        answerBox.textContent = response.ok
+            ? result.answer
+            : (result.message || "AI request failed.");
+    } catch {
+        answerBox.textContent = "Connection failed.";
+    } finally {
+        button.disabled = false;
+    }
+});
+
 
 loadDocuments();
 loadSharedDocuments();
 </script>
 </body>
 </html>
+

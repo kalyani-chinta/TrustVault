@@ -20,6 +20,18 @@ public class Document {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // Uploaded file information
+    private String originalFileName;
+
+    private String storedFileName;
+
+    private String fileType;
+
+    private Long fileSize;
+
+    // Protected document key hash (never store the actual key)
+    private String securityKeyHash;
+
     public Document() {
     }
 
@@ -53,5 +65,45 @@ public class Document {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public String getOriginalFileName() {
+        return originalFileName;
+    }
+
+    public void setOriginalFileName(String originalFileName) {
+        this.originalFileName = originalFileName;
+    }
+
+    public String getStoredFileName() {
+        return storedFileName;
+    }
+
+    public void setStoredFileName(String storedFileName) {
+        this.storedFileName = storedFileName;
+    }
+
+    public String getFileType() {
+        return fileType;
+    }
+
+    public void setFileType(String fileType) {
+        this.fileType = fileType;
+    }
+
+    public Long getFileSize() {
+        return fileSize;
+    }
+
+    public void setFileSize(Long fileSize) {
+        this.fileSize = fileSize;
+    }
+
+    public String getSecurityKeyHash() {
+        return securityKeyHash;
+    }
+
+    public void setSecurityKeyHash(String securityKeyHash) {
+        this.securityKeyHash = securityKeyHash;
     }
 }

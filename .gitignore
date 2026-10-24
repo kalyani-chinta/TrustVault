@@ -37,3 +37,12 @@ application-local.properties
 app-log.txt
 .env
 
+
+uploads/
+Document-before-pin.java
+DocumentController-backup.java
+DocumentController-before-pin.java
+DocumentController-before-upload.java
+documents-backup.html
+login-backup.html
+pom-backup.xml
