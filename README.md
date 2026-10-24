@@ -205,9 +205,3 @@ The application remains a work in progress. Comprehensive security testing, auto
 
 **Live Website:** https://trustvault-bplk.onrender.com/
 
-**Admin Email:** kalyani@gmail.com  
-**Admin Password:** 12345678
-
-Evaluators can use these credentials to log in and test the Admin-only Activity Log and other available features.
-
-Please use test documents only during evaluation.
