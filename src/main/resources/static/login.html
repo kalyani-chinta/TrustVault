@@ -3,105 +3,98 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>TrustVault | Login</title>
     <style>
         * { box-sizing: border-box; }
         body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            margin: 0; min-height: 100vh; display: grid;
+            place-items: center; padding: 20px;
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #101827, #203b59);
-            color: #fff;
+            background: #07111f; color: #eef5ff;
         }
         .card {
-            width: 90%;
-            max-width: 390px;
-            padding: 32px;
+            width: 100%; max-width: 400px; padding: 32px;
+            background: #101e30; border: 1px solid #263b52;
             border-radius: 16px;
-            background: #fff;
-            color: #172033;
-            box-shadow: 0 12px 35px #0005;
         }
-        h1 { margin: 0 0 8px; }
-        p { color: #667085; }
-        label { display: block; margin-top: 18px; font-weight: bold; }
+        h1 { margin-top: 0; color: #5eead4; }
+        p { color: #a9bbcf; line-height: 1.5; }
+        label { display: block; margin: 18px 0 8px; }
         input {
-            width: 100%;
-            padding: 12px;
-            margin-top: 7px;
-            border: 1px solid #ccd3df;
-            border-radius: 8px;
+            width: 100%; padding: 12px; border-radius: 8px;
+            border: 1px solid #40546c; background: #091525;
+            color: white; font-size: 16px;
         }
         button {
-            width: 100%;
-            padding: 13px;
-            margin-top: 22px;
-            border: 0;
-            border-radius: 8px;
-            background: #2459d3;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
+            width: 100%; margin-top: 22px; padding: 13px;
+            border: 0; border-radius: 8px; cursor: pointer;
+            background: #5eead4; color: #07111f;
+            font-size: 16px; font-weight: bold;
         }
+        button:disabled { opacity: .6; cursor: wait; }
+        a { color: #5eead4; }
         #message { overflow-wrap: anywhere; }
-        a { color: #2459d3; }
     </style>
 </head>
 <body>
     <main class="card">
         <h1>TrustVault</h1>
-        <p>Sign in to access your secure documents.</p>
+        <p>Sign in to access your secure document vault.</p>
 
         <form id="loginForm">
-            <label for="email">Email</label>
-            <input id="email" type="email" required autocomplete="email">
+            <label for="email">Email address</label>
+            <input id="email" type="email" required autocomplete="username">
 
             <label for="password">Password</label>
             <input id="password" type="password" required
                    autocomplete="current-password">
 
-            <button type="submit">Login</button>
-            <p id="message" role="status"></p>
+            <button id="loginButton" type="submit">Sign in</button>
         </form>
 
-        <p>Don't have an account? <a href="/register.html">Register</a></p>
+        <p id="message" role="status" aria-live="polite"></p>
+        <p>New to TrustVault? <a href="/register.html">Create an account</a></p>
     </main>
 
-   
-<script>
-document.getElementById("loginForm").addEventListener("submit", async function(event) {
-    event.preventDefault();
+    <script>
+        const form = document.getElementById("loginForm");
+        const button = document.getElementById("loginButton");
+        const message = document.getElementById("message");
 
-    const message = document.getElementById("message");
-    message.textContent = "Checking credentials...";
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            button.disabled = true;
+            message.textContent = "Checking your credentials...";
 
-    try {
-        const response = await fetch("/api/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                email: document.getElementById("email").value,
-                password: document.getElementById("password").value
-            })
+            try {
+                const response = await fetch("/api/login", {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email: document.getElementById("email").value.trim(),
+                        password: document.getElementById("password").value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    message.textContent = "Login successful. Opening your workspace...";
+                    window.location.replace("/");
+                } else {
+                    message.textContent = data.message || "Login failed. Check your details.";
+                    button.disabled = false;
+                }
+            } catch (error) {
+                message.textContent = "Unable to connect. Check that the server is running.";
+                button.disabled = false;
+            }
         });
-
-        const data = await response.json();
-        if (response.ok) {
-    message.textContent = "Login successful! Redirecting...";
-    window.location.href = "/";
-} else {
-    message.textContent = data.message || "Login failed.";
-}
-    } catch (error) {
-        message.textContent = "Could not connect to server. Please try again.";
-    }
-});
-</script>
+    </script>
 </body>
 </html>

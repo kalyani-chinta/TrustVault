@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +7,7 @@
     <title>TrustVault | My Documents</title>
     <style>
         * { box-sizing: border-box; }
+
         body {
             margin: 0;
             padding: 30px;
@@ -13,10 +15,12 @@
             background: #08111f;
             color: #f5f7ff;
         }
+
         .container { max-width: 800px; margin: auto; }
         h1, h2 { color: #65e6c3; }
         p { color: #aab7ca; line-height: 1.6; }
         a { color: #65e6c3; }
+
         .card {
             background: #111e30;
             border: 1px solid #26394d;
@@ -24,6 +28,7 @@
             padding: 22px;
             margin: 20px 0;
         }
+
         input, textarea {
             display: block;
             width: 100%;
@@ -34,8 +39,10 @@
             background: #08111f;
             color: white;
         }
+
         button {
-            padding: 12px 18px;
+            padding: 10px 16px;
+            margin: 5px 5px 5px 0;
             border: 0;
             border-radius: 6px;
             background: #65e6c3;
@@ -43,18 +50,30 @@
             font-weight: bold;
             cursor: pointer;
         }
+
+        .secondary {
+            background: #26394d;
+            color: #f5f7ff;
+        }
+
         .document {
             padding: 15px 0;
             border-bottom: 1px solid #26394d;
         }
-        #message { margin-top: 12px; }
+
+        .document p {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .message { margin-top: 12px; }
     </style>
 </head>
 <body>
 <div class="container">
     <a href="/">← Back to Home</a>
     <h1>My Documents</h1>
-    <p>Create and manage your documents in TrustVault.</p>
+    <p>Create, manage and securely share your documents.</p>
 
     <div class="card">
         <h2>Create a Document</h2>
@@ -64,7 +83,7 @@
                       rows="5" required></textarea>
             <button type="submit">Save Document</button>
         </form>
-        <p id="message"></p>
+        <p id="message" class="message"></p>
     </div>
 
     <div class="card">
@@ -72,49 +91,40 @@
         <button id="refreshButton" type="button">Refresh</button>
         <div id="documentsList"></div>
     </div>
+
+    <div class="card">
+        <h2>Shared With Me</h2>
+        <button id="sharedRefreshButton" type="button" class="secondary">
+            Refresh Shared Documents
+        </button>
+        <div id="sharedDocumentsList"></div>
+    </div>
 </div>
 
 <script>
 const message = document.getElementById("message");
 const documentsList = document.getElementById("documentsList");
+const sharedDocumentsList =
+    document.getElementById("sharedDocumentsList");
+
+async function readMessage(response) {
+    return await response.json().catch(() => ({}));
+}
 
 async function loadDocuments() {
-    documentsList.textContent = "Loading...";
+    documentsList.textContent = "Loading documents...";
+
     try {
         const response = await fetch("/api/documents");
 
-      if (response.status === 401) {
-    documentsList.innerHTML = `
-        <div style="
-            padding: 28px;
-            text-align: center;
-            background: #111d2e;
-            border: 1px solid #2d4058;
-            border-radius: 14px;
-            color: #e5e7eb;
-            margin: 16px 0;
-        ">
-            <div style="font-size: 42px; margin-bottom: 12px;">🔒</div>
-            <h3 style="color: #5eead4; margin: 0 0 10px;">
-                Login Required
-            </h3>
-            <p style="color: #cbd5e1; margin-bottom: 20px;">
-                Please sign in to access your secure documents.
-            </p>
-            <a href="/login.html" style="
-                display: inline-block;
-                padding: 11px 24px;
-                background: #5eead4;
-                color: #082f35;
-                text-decoration: none;
-                border-radius: 8px;
-                font-weight: bold;
-            ">Go to Login</a>
-        </div>
-    `;
-    return;
-}
-        if (!response.ok) throw new Error();
+        if (response.status === 401) {
+            documentsList.textContent = "Please log in to view documents.";
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error("Could not load documents.");
+        }
 
         const documents = await response.json();
         documentsList.replaceChildren();
@@ -134,75 +144,219 @@ async function loadDocuments() {
             const content = document.createElement("p");
             content.textContent = doc.content;
 
-            item.append(heading, content);
-            documentsList.appendChild(item);
-        });
-    } catch {
-        documentsList.textContent = "Could not load documents. Please refresh.";
-    }
-}
+            const shareButton = document.createElement("button");
+            shareButton.type = "button";
+            shareButton.textContent = "Share";
 
-document.getElementById("documentForm").addEventListener("submit", async event => {
-    event.preventDefault();
-    message.textContent = "Saving document...";
+            shareButton.addEventListener("click", async () => {
+                const email = prompt(
+                    "Enter the registered email of the user to share with:"
+                );
+
+                if (!email || !email.trim()) return;
+
+
+                shareButton.disabled = true;
+
+                try {
+                    const shareResponse = await fetch(
+                        `/api/documents/${doc.id}/share`,
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                email: email.trim()
+                            })
+                        }
+                    );
+
+                    const result = await readMessage(shareResponse);
+
+                    alert(
+                        result.message ||
+                        (shareResponse.ok
+                            ? "Document shared successfully."
+                            : "Could not share document.")
+                    );
+                } catch {
+                    alert("Connection failed. Please try again.");
+                } finally {
+                    shareButton.disabled = false;
+                }
+            });
+const revokeButton = document.createElement("button");
+revokeButton.textContent = "Revoke Access";
+revokeButton.type = "button";
+
+revokeButton.addEventListener("click", async () => {
+    const email = prompt("Enter the registered email to revoke access:");
+    if (!email || !email.trim()) return;
 
     try {
-        const response = await fetch("/api/documents", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                title: document.getElementById("title").value.trim(),
-                content: document.getElementById("content").value.trim()
-            })
-        });
-
-      
-if (response.status === 401) {
-    message.innerHTML = `
-        <div style="
-            padding: 20px;
-            text-align: center;
-            background: #111d2e;
-            border: 1px solid #2d4058;
-            border-radius: 12px;
-            margin-top: 16px;
-        ">
-            <div style="font-size: 32px; margin-bottom: 8px;">🔒</div>
-            <h3 style="color: #65e6c3; margin: 0 0 10px;">
-                Login Required
-            </h3>
-            <p style="margin-bottom: 18px;">
-                Please sign in before saving your document.
-            </p>
-            <a href="/login.html" style="
-                display: inline-block;
-                padding: 10px 20px;
-                background: #65e6c3;
-                color: #08111f;
-                text-decoration: none;
-                border-radius: 6px;
-                font-weight: bold;
-            ">Go to Login</a>
-        </div>
-    `;
-    return;
-}
+        const response = await fetch(
+            `/api/documents/${doc.id}/shares`
+        );
 
         if (!response.ok) {
-            message.textContent = "Could not save document. Please check your input.";
+            alert("Could not find shared users.");
             return;
         }
 
-        message.textContent = "Document saved successfully!";
-        event.target.reset();
-        await loadDocuments();
-    } catch {
-        message.textContent = "Connection failed. Please try again.";
+        const shares = await response.json();
+        console.log("SHARES FOUND:", shares);
+        const share = shares.find(
+            item => item.email.toLowerCase() === email.trim().toLowerCase()
+        );
+
+        if (!share) {
+            alert("This user does not have access to this document.");
+            return;
+        }
+
+        const revokeResponse = await fetch(
+            `/api/documents/${doc.id}/share/${share.userId}`,
+            { method: "DELETE" }
+        );
+
+        const result = await revokeResponse.json().catch(() => ({}));
+        alert(result.message || (revokeResponse.ok
+            ? "Access revoked successfully."
+            : "Could not revoke access."));
+} catch (error) {
+    console.error("Revoke error:", error);
+    alert("Revoke error: " + error.message);
+
     }
 });
+            item.append(heading, content, shareButton, revokeButton);
+            documentsList.appendChild(item);
+        });
+    } catch {
+        documentsList.textContent =
+            "Could not load documents. Please refresh.";
+    }
+}
 
-document.getElementById("refreshButton").addEventListener("click", loadDocuments);
+async function loadSharedDocuments() {
+    sharedDocumentsList.textContent = "Loading shared documents...";
+
+    try {
+        const response = await fetch("/api/documents/shared-with-me");
+
+        if (response.status === 401) {
+            sharedDocumentsList.textContent =
+                "Please log in to view shared documents.";
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error("Could not load shared documents.");
+        }
+
+        const documents = await response.json();
+        sharedDocumentsList.replaceChildren();
+
+        if (documents.length === 0) {
+            sharedDocumentsList.textContent =
+                "No documents have been shared with you yet.";
+            return;
+        }
+
+        documents.forEach(doc => {
+            const item = document.createElement("div");
+            item.className = "document";
+
+            const heading = document.createElement("h3");
+            heading.textContent = doc.title;
+
+            const content = document.createElement("p");
+            content.textContent = doc.content;
+
+            const openButton = document.createElement("button");
+            openButton.type = "button";
+            openButton.textContent = "Open Shared Document";
+
+            openButton.addEventListener("click", async () => {
+                try {
+                    const openResponse =
+                        await fetch(`/api/documents/${doc.id}`);
+
+                    if (!openResponse.ok) {
+                        alert("Unable to open document. Access may have been revoked.");
+                        await loadSharedDocuments();
+                        return;
+                    }
+
+                    const openedDoc = await openResponse.json();
+                    alert(
+                        "Document: " + openedDoc.title +
+                        "\n\nContent:\n" + openedDoc.content
+                    );
+                } catch {
+                    alert("Connection failed. Please try again.");
+                }
+            });
+
+            item.append(heading, content, openButton);
+            sharedDocumentsList.appendChild(item);
+        });
+    } catch {
+        sharedDocumentsList.textContent =
+            "Could not load shared documents. Please refresh.";
+    }
+}
+
+document.getElementById("documentForm").addEventListener(
+    "submit",
+    async event => {
+        event.preventDefault();
+        message.textContent = "Saving document...";
+
+        try {
+            const response = await fetch("/api/documents", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    title: document.getElementById("title").value.trim(),
+                    content: document.getElementById("content").value.trim()
+                })
+            });
+
+            const result = await readMessage(response);
+
+            if (response.status === 401) {
+                message.textContent =
+                    "Please log in before saving your document.";
+                return;
+            }
+
+            if (!response.ok) {
+                message.textContent =
+                    result.message || "Could not save document.";
+                return;
+            }
+
+            message.textContent = "Document saved successfully!";
+            event.target.reset();
+            await loadDocuments();
+        } catch {
+            message.textContent = "Connection failed. Please try again.";
+        }
+    }
+);
+
+document.getElementById("refreshButton")
+    .addEventListener("click", loadDocuments);
+
+document.getElementById("sharedRefreshButton")
+    .addEventListener("click", loadSharedDocuments);
+
 loadDocuments();
+loadSharedDocuments();
 </script>
 </body>
 </html>
